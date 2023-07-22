@@ -8,7 +8,6 @@ import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,23 +18,23 @@ import java.util.Collections;
 public class ProductServiceImpl implements ProductService {
 
 
-    private final WebClient webClient;
+    private final WebClient.Builder webClient;
 
     @Autowired
-    public ProductServiceImpl(WebClient webClient) {
+    public ProductServiceImpl(WebClient.Builder webClient) {
         this.webClient = webClient;
     }
 
     @Override
     public Flux<Product> findAll() {
-        return this.webClient.get().
+        return this.webClient.build().get().
                 accept(MediaType.APPLICATION_JSON)
                 .exchangeToFlux(clientResponse -> clientResponse.bodyToFlux(Product.class));
     }
 
     @Override
     public Mono<Product> findById(String id) {
-        return this.webClient.get()
+        return this.webClient.build().get()
                 .uri("/{id}", Collections.singletonMap("id", id))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -45,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Mono<Product> save(Product product) {
-        return this.webClient.post()
+        return this.webClient.build().post()
                 .accept(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(product))
                 .retrieve()
@@ -54,7 +53,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Mono<Product> update(Product product, String id) {
-        return this.webClient.put()
+        return this.webClient.build().put()
                 .uri("/{id}", Collections.singletonMap("id", id))
                 .accept(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(product))
@@ -64,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Mono<Void> delete(String id) {
-        return this.webClient.delete()
+        return this.webClient.build().delete()
                 .retrieve()
                 .bodyToMono(Void.class);
     }
@@ -76,7 +75,7 @@ public class ProductServiceImpl implements ProductService {
                 .headers(httpHeaders -> {
                     httpHeaders.setContentDispositionFormData("file", filePart.filename());
                 });
-        return this.webClient.post().uri("/upload/{id}", Collections.singletonMap("id", id))
+        return this.webClient.build().post().uri("/upload/{id}", Collections.singletonMap("id", id))
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .bodyValue(multipartBodyBuilder.build())
                 .retrieve()
